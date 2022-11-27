@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion } = require("mongodb");
-
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 const app = express();
@@ -81,15 +81,13 @@ async function run() {
 
     // ****************END Bookings******** ***********
 
-
     // *****************START USRS*********************
 
-    app.post('/users', async(req, res) => {
+    app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
       res.send(result);
-
-    })
+    });
 
     // *****************End USRS***********************
   } finally {

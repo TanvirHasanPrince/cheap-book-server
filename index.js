@@ -23,6 +23,7 @@ async function run() {
   try {
     const categories = client.db("cheapBook").collection("bookCategories");
     const books = client.db("cheapBook").collection("BookCollection");
+    const bookingsCollection = client.db("cheapBook").collection("bookings");
 
     // API: Getting the categories in the Homepage: Start********
 
@@ -62,9 +63,23 @@ async function run() {
     
 
 
+    // ****************START Bookings*****************
+
+    //Start: API POST bookings
+    app.post('/bookings', async(req, res) => {
+      const booking = req.body
+      console.log(booking);
+      const result = await bookingsCollection.insertOne(booking);
+      res.send(result); 
+    })
+
+    //ENd: API POST bookings
+
+    // ****************END Bookings*******************
+
   } finally {
   }
-}
+} 
 run().catch((error) => cosole.log(error));
 
 // APIs END*******************************************

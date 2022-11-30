@@ -44,6 +44,24 @@ async function run() {
     const bookingsCollection = client.db("cheapBook").collection("bookings");
     const usersCollection = client.db("cheapBook").collection("users");
 
+    //Start: JWT
+
+    app.get("/jwt", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user) {
+        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {
+          expiresIn: "5h",
+        });
+        return res.send({ accessToken: token });
+      }
+      console.log(user);
+      res.status(403).send({ accessToken: "" });
+    });
+
+    //END: JWT
+
     // API: Getting the categories in the Homepage: Start********
 
     app.get("/categories", async (req, res) => {
@@ -54,16 +72,31 @@ async function run() {
 
     // API: Getting the categories in the Homepage: END ********
 
-//Start: Sending book to collection
+    //Start: Sending book to collection
 
     app.post("/books", async (req, res) => {
-      const bookSend= req.body;
+      const bookSend = req.body;
       const result = await books.insertOne(bookSend);
       res.send(result);
     });
 
+    //End: Sending book to collection
 
-//End: Sending book to collection
+    //Get all the books 
+    //  app.get("/books", async (req, res) => {
+    //    const query = {};
+    //    const result = await books.find(query).toArray();
+    //    res.send(result);
+    //  });
+    //Start: Get books posted by particular buyer
+ app.get("/books", async (req, res) => {
+   const email = req.query.email;
+   const query = { email: email };
+   const result = await books.find(query).toArray();
+   res.send(result);
+ });
+
+    //End: Get books posted by particular buyer
 
     // API: Getting the books according to category: Start ********
 
@@ -114,24 +147,6 @@ async function run() {
     // ****************END Bookings******** ***********
 
     // *****************START USRS*********************
-
-    //Start: JWT
-
-    app.get("/jwt", async (req, res) => {
-      const email = req.query.email;
-      const query = { email: email };
-      const user = await usersCollection.findOne(query);
-      if (user) {
-        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {
-          expiresIn: "5h",
-        });
-        return res.send({ accessToken: token });
-      }
-      console.log(user);
-      res.status(403).send({ accessToken: "" });
-    });
-
-    //END: JWT
 
     //START: API POST USER
     app.post("/users", async (req, res) => {

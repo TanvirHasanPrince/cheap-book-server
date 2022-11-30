@@ -6,7 +6,6 @@ const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
 const app = express();
 
-
 app.use(cors());
 app.use(express.json());
 
@@ -19,25 +18,22 @@ const client = new MongoClient(uri, {
 });
 
 function verifyJWT(req, res, next) {
-console.log("token inside verifyJWT", req.headers.authorization);
-const authHeader = req.headers.authorization; 
-if (!authHeader) {
-  return res.status(401).send(`unauthorized access`)
-}
-
-const token = authHeader.split(' ')[1];
-
-jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
-  if(err) {
-    return res.status(403).send({message: 'Forbidden access'})
+  console.log("token inside verifyJWT", req.headers.authorization);
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send(`unauthorized access`);
   }
-  req.decoded = decoded;
-  next()
-})
+
+  const token = authHeader.split(" ")[1];
+
+  jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: "Forbidden access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
 }
-
-
-
 
 // APIs start*******************************************
 
@@ -57,6 +53,17 @@ async function run() {
     });
 
     // API: Getting the categories in the Homepage: END ********
+
+//Start: Sending book to collection
+
+    app.post("/books", async (req, res) => {
+      const bookSend= req.body;
+      const result = await books.insertOne(bookSend);
+      res.send(result);
+    });
+
+
+//End: Sending book to collection
 
     // API: Getting the books according to category: Start ********
 
@@ -94,9 +101,9 @@ async function run() {
       const email = req.query.email;
       const decodedEmail = req.decoded.email;
       if (email !== decodedEmail) {
-        return res.status(403).send({message: 'Forbidden access'})
+        return res.status(403).send({ message: "Forbidden access" });
       }
-        console.log("token", req.headers.authorization);
+      console.log("token", req.headers.authorization);
       const query = { email: email };
 
       const bookings = await bookingsCollection.find(query).toArray();
@@ -110,20 +117,21 @@ async function run() {
 
     //Start: JWT
 
-    app.get('/jwt', async (req, res) => {
+    app.get("/jwt", async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
       const user = await usersCollection.findOne(query);
-      if(user) {
-        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {expiresIn: '5h'});
-        return res.send({accessToken: token})
+      if (user) {
+        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {
+          expiresIn: "5h",
+        });
+        return res.send({ accessToken: token });
       }
-      console.log(user)
-      res.status(403).send({accessToken: ''})
-    })
+      console.log(user);
+      res.status(403).send({ accessToken: "" });
+    });
 
     //END: JWT
-
 
     //START: API POST USER
     app.post("/users", async (req, res) => {
@@ -132,6 +140,17 @@ async function run() {
       res.send(result);
     });
     //End: API POST USER
+
+    //Start: Checking if the user is Admin or not
+    app.get("users/admin/:email", async (req, res) => {
+      const id = req.params.id;
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isAdmin: user?.role === "admin" });
+    });
+
+    //End: Checking if the user is Admin or not
 
     //START: API GET user
 
@@ -144,20 +163,29 @@ async function run() {
     //END: API GET user
 
     // Start: MAKE ADMIN
- app.put("/users/admin/:id", async (req, res) => {
-  const id = req.params.id;
-  const filter = {_id: ObjectId(id)};
-  const options = {upsert: true};
-  const updateDoc = {
-    $set: {
-      role: 'admin'
-    }
-  }
+    app.put("/users/admin/:id", verifyJWT, async (req, res) => {
+      const decodedEmail = req.decoded.email;
+      const query = { email: decodedEmail };
+      const user = await usersCollection.findOne(query);
+      if (user.role !== "admin") {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          role: "admin",
+        },
+      };
 
-  const results = await usersCollection.updateOne(filter, updateDoc, options);
-  res.send(results); 
- })
-
+      const results = await usersCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(results);
+    });
 
     // End: MAKE ADMIN
 

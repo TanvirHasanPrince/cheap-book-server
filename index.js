@@ -82,38 +82,37 @@ async function run() {
 
     //End: Sending book to collection
 
-    //Get all the books 
+    //Get all the books
     //  app.get("/books", async (req, res) => {
     //    const query = {};
     //    const result = await books.find(query).toArray();
     //    res.send(result);
     //  });
     //Start: Get books posted by particular buyer
- app.get("/books", async (req, res) => {
-   const email = req.query.email;
-   const query = { email: email };
-   const result = await books.find(query).toArray();
-   res.send(result);
- });
+    app.get("/books", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await books.find(query).toArray();
+      res.send(result);
+    });
 
- //Start: Get Unsold books
-  app.get("/books/unsold", async (req, res) => {
-    
-    const query = { sold: 'Unsold' };
-    const result = await books.find(query).limit(3).toArray();
-    res.send(result);
-  });
- //End: Get Unsold books
+    //Start: Get Unsold books
+    app.get("/books/unsold", async (req, res) => {
+      const query = { sold: "Unsold" };
+      const result = await books.find(query).limit(3).toArray();
+      res.send(result);
+    });
+    //End: Get Unsold books
 
-//  Start: DELETE my book post
- app.delete("/books/:id", async (req, res) => {
-  const id = req.params.id;
-  console.log(`deleting ${id}`)
-   const filter = {_id: ObjectId(id)}
-   const result = await books.deleteOne(filter);
-   res.send(result);
- });
-//  End: DELETE my book post
+    //  Start: DELETE my book post
+    app.delete("/books/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(`deleting ${id}`);
+      const filter = { _id: ObjectId(id) };
+      const result = await books.deleteOne(filter);
+      res.send(result);
+    });
+    //  End: DELETE my book post
 
     //End: Get books posted by particular buyer
 
@@ -176,16 +175,29 @@ async function run() {
     //End: API POST USER
 
     //Start: Checking if the user is Admin or not
-    app.get("users/admin/:email", async (req, res) => {
-      // const id = req.params.id;
+    app.get("/users/admin/:email", async (req, res) => {
       const email = req.params.email;
-      console.log(email);
       const query = { email };
       const user = await usersCollection.findOne(query);
       res.send({ isAdmin: user?.role === "admin" });
     });
-
     //End: Checking if the user is Admin or not
+    //Start: Checking if the user is seller or not
+    app.get("/users/seller/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isSeller: user?.role === "seller" });
+    });
+    //End: Checking if the user is seller or not
+    //Start: Checking if the user is buyer or not
+    app.get("/users/buyer/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isBuyer: user?.role === "buyer" });
+    });
+    //End: Checking if the user is buyer or not
 
     //START: API GET user
 
@@ -198,13 +210,13 @@ async function run() {
     //END: API GET user
 
     // Start: DELETE users
-     app.delete("/users/:id", async (req, res) => {
-       const id = req.params.id;
-       console.log(`deleting ${id}`);
-       const filter = { _id: ObjectId(id) };
-       const result = await usersCollection.deleteOne(filter);
-       res.send(result);
-     });
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(`deleting ${id}`);
+      const filter = { _id: ObjectId(id) };
+      const result = await usersCollection.deleteOne(filter);
+      res.send(result);
+    });
     // End: DELETE users
 
     // Start: MAKE ADMIN
@@ -212,7 +224,7 @@ async function run() {
       const decodedEmail = req.decoded.email;
       const query = { email: decodedEmail };
       const user = await usersCollection.findOne(query);
-      if (user.role !== "admin") {
+      if (user?.role !== "admin") {
         return res.status(403).send({ message: "Forbidden access" });
       }
       const id = req.params.id;

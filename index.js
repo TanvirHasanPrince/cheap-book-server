@@ -96,6 +96,16 @@ async function run() {
    res.send(result);
  });
 
+//  Start: DELETE my book post
+ app.delete("/books/:id", async (req, res) => {
+  const id = req.params.id;
+  console.log(`deleting ${id}`)
+   const filter = {_id: ObjectId(id)}
+   const result = await books.deleteOne(filter);
+   res.send(result);
+ });
+//  End: DELETE my book post
+
     //End: Get books posted by particular buyer
 
     // API: Getting the books according to category: Start ********
@@ -177,6 +187,16 @@ async function run() {
 
     //END: API GET user
 
+    // Start: DELETE users
+     app.delete("/users/:id", async (req, res) => {
+       const id = req.params.id;
+       console.log(`deleting ${id}`);
+       const filter = { _id: ObjectId(id) };
+       const result = await usersCollection.deleteOne(filter);
+       res.send(result);
+     });
+    // End: DELETE users
+
     // Start: MAKE ADMIN
     app.put("/users/admin/:id", verifyJWT, async (req, res) => {
       const decodedEmail = req.decoded.email;
@@ -208,7 +228,7 @@ async function run() {
   } finally {
   }
 }
-run().catch((error) => cosole.log(error));
+run().catch((error) => console.log(error));
 
 // APIs END*******************************************
 

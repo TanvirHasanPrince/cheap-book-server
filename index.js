@@ -96,6 +96,15 @@ async function run() {
    res.send(result);
  });
 
+ //Start: Get Unsold books
+  app.get("/books/unsold", async (req, res) => {
+    
+    const query = { sold: 'Unsold' };
+    const result = await books.find(query).limit(3).toArray();
+    res.send(result);
+  });
+ //End: Get Unsold books
+
 //  Start: DELETE my book post
  app.delete("/books/:id", async (req, res) => {
   const id = req.params.id;
@@ -168,8 +177,9 @@ async function run() {
 
     //Start: Checking if the user is Admin or not
     app.get("users/admin/:email", async (req, res) => {
-      const id = req.params.id;
+      // const id = req.params.id;
       const email = req.params.email;
+      console.log(email);
       const query = { email };
       const user = await usersCollection.findOne(query);
       res.send({ isAdmin: user?.role === "admin" });
